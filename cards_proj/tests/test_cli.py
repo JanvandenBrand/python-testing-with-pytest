@@ -67,7 +67,24 @@ def test_config(mock_cardsdb):
     assert result.stdout.rstrip() == "/foo/"
 
 
+# count also prints a valiue and can be tested like condig
+def test_count(mock_cardsdb):
+    mock_cardsdb.count.return_value = 1
+    result = runner.invoke(app, ["count"])
+    assert result.stdout.rstrip() == "1"
+
+
+# Add card doesn't return a value
+# instead we need to verify that it is called correctly.
+# card add should have the kwargs: summary, owner and state (default is to do)
 def test_add_with_owner(mock_cardsdb):
     cards_cli("add some task -o brian")
     expected = cards.Card("some task", owner="brian", state="todo")
     mock_cardsdb.add_card.assert_called_with(expected)
+
+
+# Handle errors with a mock
+def test_delete_invalid(mock_cardsdb):
+    mock_cardsdb.delete_card.side_effect = cards.api.InvalidCardId
+    out = cards_cli("delete 25")
+    assert "Error: Invalid card id 25" in out
